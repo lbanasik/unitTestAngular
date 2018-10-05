@@ -1,30 +1,56 @@
-import { TestBed, ComponentFixture } from "@angular/core/testing";
-import { HeroComponent } from "../hero/hero.component";
-import { NO_ERRORS_SCHEMA } from "../../../node_modules/@angular/core";
-import { By } from "@angular/platform-browser";
+import { ComponentFixture, TestBed } from "../../../node_modules/@angular/core/testing";
+import { HeroesComponent } from "./heroes.component";
+import { HeroService } from "../hero.service";
+import { Component, Input } from "../../../node_modules/@angular/core";
+import { Hero } from "../hero";
+import { of } from "../../../node_modules/rxjs";
+import { By } from "../../../node_modules/@angular/platform-browser";
 
-describe('Testy shallow', () => {
-  let fixture: ComponentFixture<HeroComponent>;
+describe('heroes component', () => {
+  let fixture: ComponentFixture<HeroesComponent>;
+  let mockHeroService;
+  let HEROES;
+
+  @Component({
+    selector: 'app-hero',
+    template: '<div></div>',
+  })
+  class FakeHeroComponent {
+    @Input() hero: Hero;
+    //@Output() delete = new EventEmitter();
+  }
 
   beforeEach(() => {
+    HEROES = [
+      {id: 1, name: 'Puszek', strength: 8},
+      {id: 2, name: 'Puszek okruszek', strength: 23},
+      {id: 2, name: 'Puszek maluszek', strength: 69},
+    ];
+    mockHeroService = jasmine.createSpyObj(['getHeroes', 'addHero', 'deleteHero']);
     TestBed.configureTestingModule({
-      declarations: [HeroComponent],
-      schemas: [NO_ERRORS_SCHEMA]
+      declarations: [
+        HeroesComponent,
+        FakeHeroComponent
+      ],
+      providers: [
+        { provide: HeroService, useValue: mockHeroService }
+      ]
     });
-    fixture = TestBed.createComponent(HeroComponent);
+
+    fixture = TestBed.createComponent(HeroesComponent);
   });
 
-  it('hero name', () => {
-    fixture.componentInstance.hero = { id: 1, name: 'super BOHEN', strength: 3 };
-    expect(fixture.componentInstance.hero.name).toEqual('super BOHEN');
-  });
-
-  it('html test', () => {
-    fixture.componentInstance.hero = { id: 1, name: 'super BOHEN', strength: 3 };
+  it('should set heroes correctly from the service', () => {
+    mockHeroService.getHeroes.and.returnValue(of(HEROES));
     fixture.detectChanges();
 
-    let deA = fixture.debugElement.query(By.css('a'));
-    expect(deA.nativeElement.textContent).toContain('super BOHEN');
-    expect(fixture.nativeElement.querySelector('a').textContent).toContain('super BOHEN');
+    expect(fixture.componentInstance.heroes.length).toBe(3);
+  });
+
+  it('should create li for each hero in heroes array', () => {
+    mockHeroService.getHeroes.and.returnValue(of(HEROES));
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.queryAll(By.css('li')).length).toBe(3);
   });
 });
